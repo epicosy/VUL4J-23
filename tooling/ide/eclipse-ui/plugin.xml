@@ -1,0 +1,746 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or
+    more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information regarding
+    copyright ownership. The ASF licenses this file to you under the
+    Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain
+    a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+    applicable law or agreed to in writing, software distributed
+    under the License is distributed on an "AS IS" BASIS, WITHOUT
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions
+    and limitations under the License.
+-->
+<?eclipse version="3.0"?>
+<plugin>
+
+  <!-- Define the launch configuration's tab group -->
+    <extension point="org.eclipse.debug.ui.launchConfigurationTabGroups">
+    <launchConfigurationTabGroup
+      id="org.apache.sling.ide.launchpadLaunchConfigurationTabGroup"
+      type="org.apache.sling.ide.launchpadLaunchConfigurationType"
+      class="org.apache.sling.ide.eclipse.ui.internal.SlingLaunchpadLaunchConfigurationTabGroup">
+    </launchConfigurationTabGroup>
+  </extension>
+  
+
+	<!-- Define images -->
+	<extension point="org.eclipse.wst.server.ui.serverImages">
+	      <image
+             icon="icons/obj16/sling_server.gif"
+             id="slinggif"
+             typeIds="org.apache.sling.ide.launchpadServer,org.apache.sling.ide.launchpadRuntimeType"/>
+	      <image
+             icon="icons/obj16/sling_content.gif"
+             id="slingcontentgif"
+             typeIds="sling.content"/>
+	      <image
+             icon="icons/obj16/sling_bundle.gif"
+             id="slingbundle"
+             typeIds="sling.bundle"/>
+	</extension>
+	
+	<extension point="org.eclipse.debug.ui.launchConfigurationTypeImages">
+		<launchConfigurationTypeImage
+			id="org.apache.sling.ide.launchpadLaunchConfigurationTypeImage"
+	     	configTypeID="org.apache.sling.ide.launchpadLaunchConfigurationType"
+	     	icon="icons/obj16/sling_server.gif">
+		</launchConfigurationTypeImage>
+	</extension>	  
+	
+	<!-- Define the editor section(s) we contribute to the WST UI -->
+   <extension point="org.eclipse.wst.server.ui.editorPageSections">      
+      <section
+         id="org.apache.sling.ide.launchpadConfigurationEditorSection"
+         order="10"
+         insertionId="org.eclipse.wst.server.editor.overview.left"
+         typeIds="org.apache.sling.ide.launchpadServer"
+         class="org.apache.sling.ide.eclipse.ui.internal.ConnectionEditorSection">
+      </section>
+      <section
+         id="org.apache.sling.ide.launchpadConfigurationEditorSection"
+         order="10"
+         insertionId="org.eclipse.wst.server.editor.overview.right"
+         typeIds="org.apache.sling.ide.launchpadServer"
+         class="org.apache.sling.ide.eclipse.ui.internal.InstallEditorSection">
+      </section>
+      <section
+         id="org.apache.sling.ide.launchpadConfigurationEditorSection"
+         order="15"
+         insertionId="org.eclipse.wst.server.editor.overview.right"
+         typeIds="org.apache.sling.ide.launchpadServer"
+         class="org.apache.sling.ide.eclipse.ui.internal.DebugEditorSection">
+      </section>
+   </extension>
+   
+   <!-- hook in the server creation wizard -->
+    <extension
+          point="org.eclipse.wst.server.ui.wizardFragments">
+       <fragment
+             class="org.apache.sling.ide.eclipse.ui.wizards.ApplyDefaultSlingServerValuesFragment"
+             id="org.apache.sling.ide.eclipse.ui.wizards.ApplyDefaultSlingServerValuesFragment"
+             typeIds="org.apache.sling.ide.launchpadServer">
+       </fragment>
+    </extension>   
+  
+  <!-- Runtime images -->
+    <extension point="org.eclipse.wst.common.project.facet.ui.images">
+    <image
+          facet="sling.bundle"
+          path="icons/obj16/sling_bundle.gif"
+          runtime-component-type="org.apache.sling.ide.launchpadRuntimeComponentType"/>
+    <image
+          facet="sling.content"
+          path="icons/obj16/sling_content.gif"
+          runtime-component-type="org.apache.sling.ide.launchpadRuntimeComponentType">
+    </image>
+  </extension>
+  
+  <!-- Menu contributions -->
+     <extension
+         point="org.eclipse.ui.popupMenus">
+         <!-- All Sling contributions -->
+        <objectContribution
+            id="org.apache.sling.ide.menu"
+            objectClass="org.eclipse.core.resources.IResource">
+            <menu id="org.apache.sling.ide.menu"
+              path="additions"
+              label="Sling">
+            	<groupMarker name="sling"/>
+            </menu>
+         </objectContribution>
+         <!-- Import. 
+         	I prefer to do this outside the import wizard section since I can restrict the destination -->
+         <objectContribution id="org.apache.sling.ide.menu.import"
+         	objectClass="org.eclipse.core.resources.IResource">
+         	
+         <action
+               class="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction"
+               id="org.apache.sling.ide.menu.importContentAction"
+               definitionId="org.apache.sling.ide.commands.importContent"
+               label="Import from server..."
+               menubarPath="org.apache.sling.ide.menu/sling"
+               style="push">
+         </action>
+         <enablement>
+			<or>
+			    <test 
+		            property="org.apache.sling.ide.eclipse.canBeImported"/>
+		    </or>         
+         </enablement>
+		</objectContribution>
+		<!-- Export -->
+		<objectContribution id="org.apache.sling.ide.menu.export"
+         	objectClass="org.eclipse.core.resources.IResource">
+         	
+         <action
+               class="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction"
+               id="org.apache.sling.ide.menu.exportContentAction"
+               definitionId="org.apache.sling.ide.commands.exportContent"
+               label="Export to server..."
+               menubarPath="org.apache.sling.ide.menu/sling"
+               style="push">
+         </action>
+         <enablement>
+			<or>
+			    <test 
+		            property="org.apache.sling.ide.eclipse.canBeExported"/>
+		    </or>         
+         </enablement>
+		</objectContribution>		
+  </extension>
+   <extension
+         point="org.eclipse.ui.importWizards">
+      <category
+            id="org.apache.sling.ide.eclipse.ui.wizards.import"
+            name="Sling">
+      </category>
+      <wizard
+            category="org.apache.sling.ide.eclipse.ui.wizards.import"
+            class="org.apache.sling.ide.eclipse.ui.wizards.ImportWizard"
+            icon="icons/obj16/sling_misc.gif"
+            id="org.apache.sling.ide.eclipse.ui.wizards.importWizard"
+            name="Import from Repository">
+         <description>
+            Import content from a remote Repository into the local Workspace.
+         </description>
+      </wizard>
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.commands">
+         <command
+               id="org.apache.sling.ide.commands.importContent"
+               name="Import content from server"
+               categoryId="org.eclipse.ui.category.window"
+               defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ImportContentAction">
+         </command>
+         <command
+               id="org.apache.sling.ide.commands.exportContent"
+               name="Export content to server"
+               categoryId="org.eclipse.ui.category.window"
+               defaultHandler="org.apache.sling.ide.eclipse.ui.internal.ExportContentAction">
+         </command>         
+   </extension>
+   
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="org.apache.sling.ide.eclipse.ui"
+            name="Sling">
+      </category>
+      <wizard
+            category="org.apache.sling.ide.eclipse.ui"
+            class="org.apache.sling.ide.eclipse.ui.wizards.NewSlingContentProjectWizard"
+            icon="icons/obj16/sling_misc.gif"
+            id="org.apache.sling.ide.eclipse.ui.wizards.NewSlingContentProjectWizard"
+            name="Sling Content Project"
+            project="true">
+      </wizard>
+   </extension>   
+
+   <!-- Property page for project to select directory to sync -->
+   <extension point="org.eclipse.ui.propertyPages"> 
+        <page 
+            id="org.apache.sling.ide.projectPropertyPage" 
+            name="Sling" 
+            class="org.apache.sling.ide.eclipse.ui.propertyPages.SlingProjectPropertyPage"> 
+            <enabledWhen>
+            <and>
+             	<instanceof
+                  	value="org.eclipse.core.resources.IProject">
+             	</instanceof>
+             	<or>
+	 				<test 
+			            property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+			            value="sling.content"/>
+			    </or>
+             </and>
+          </enabledWhen>
+        </page> 
+    </extension>
+	<extension
+			point="org.eclipse.ui.navigator.viewer">
+		<viewerContentBinding viewerId="org.eclipse.ui.navigator.ProjectExplorer">
+			<includes>
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.javaEEFilter" />
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.navigatorJcrContent" />
+				<contentExtension pattern="org.apache.sling.ide.eclipse-ui.linkHelper"/>	
+			</includes>
+		</viewerContentBinding>
+	</extension>
+   <extension
+         point="org.eclipse.ui.navigator.navigatorContent">
+      <commonFilter
+     	   name="Sling content project Java EE filter"
+     	   class="org.apache.sling.ide.eclipse.ui.nav.ContentViewerFilter"
+           id="org.apache.sling.ide.eclipse-ui.javaEEFilter"
+           description="Hides Java EE deployment descriptors for content projects."
+           activeByDefault="true">
+      </commonFilter>
+      <navigatorContent
+            appearsBefore="org.eclipse.jst.jee.ui.ejb"
+            contentProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentContentProvider"
+            icon="icons/obj16/sling_misc.gif"
+            id="org.apache.sling.ide.eclipse-ui.navigatorJcrContent"
+            labelProvider="org.apache.sling.ide.eclipse.ui.nav.JcrContentLabelProvider"
+            name="Repository Content"
+            priority="highest">
+         <triggerPoints>
+            <or>         
+              <instanceof 
+                    value="org.eclipse.core.resources.IWorkspaceRoot" /> 
+              <instanceof
+                    value="org.eclipse.core.resources.IProject" />  
+              <instanceof  
+                     value="org.eclipse.core.resources.IFolder" /> 
+              <instanceof  
+                     value="org.eclipse.core.resources.IFile" /> 
+              <instanceof  
+                     value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode" /> 
+           </or>
+         </triggerPoints>
+         <enablement>
+            <or>         
+              <instanceof 
+                    value="org.eclipse.core.resources.IWorkspaceRoot" /> 
+              <instanceof
+                    value="org.eclipse.core.resources.IProject" />  
+              <instanceof  
+                     value="org.eclipse.core.resources.IFolder" /> 
+              <instanceof  
+                     value="org.eclipse.core.resources.IFile" /> 
+              <instanceof  
+                     value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode" /> 
+           </or>
+         </enablement>
+         <commonWizard
+               type="new"
+               wizardId="org.apache.sling.ide.eclipse.ui.wizards.NewNodeWizard">
+            <enablement>
+               <or>
+                  <instanceof
+                        value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+                  </instanceof>
+               </or></enablement>
+         </commonWizard>
+		   <actionProvider
+		         class="org.apache.sling.ide.eclipse.ui.nav.PackageExplorerOpenActionProvider"
+		         id="org.apache.sling.ide.eclipse.ui.nav.actions.OpenActions"
+		         overrides="org.eclipse.jdt.ui.navigator.actions.OpenActions">
+		         <enablement>
+		         	<instanceof value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode"/>
+		         </enablement>
+		   </actionProvider>
+     <override
+           policy="InvokeAlwaysRegardlessOfSuppressedExt"
+           suppressedExtensionId="org.eclipse.ui.navigator.resourceContent">
+     </override>
+     <commonSorter
+           class="org.apache.sling.ide.eclipse.ui.nav.Sorter">
+        <parentExpression>
+           <or>
+              <adapt
+                    type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+              </adapt>
+           </or>
+        </parentExpression>
+     </commonSorter>
+     <dropAssistant
+           class="org.apache.sling.ide.eclipse.ui.dnd.assistant.JcrDropAdapterAssistant"
+           id="org.apache.sling.ide.eclipse.ui.dnd.assistant">
+        <possibleDropTargets></possibleDropTargets>
+     </dropAssistant>
+        
+      </navigatorContent>
+   </extension>
+   <extension
+         point="org.eclipse.core.runtime.adapters">
+      <factory
+            adaptableType="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode"
+            class="org.apache.sling.ide.eclipse.ui.nav.model.JcrNodeAdapterFactory">
+         <adapter
+               type="org.eclipse.core.resources.IFile">
+         </adapter>
+         <adapter
+               type="org.eclipse.core.resources.IResource">
+         </adapter>
+      </factory>
+   </extension>
+   <extension
+         point="org.eclipse.ui.viewActions">
+      <viewContribution
+            id="org.apache.sling.ide.eclipse-ui.viewContribution1"
+            targetID="org.eclipse.wst.server.ui.ServersView">
+         <action
+               class="org.apache.sling.ide.eclipse.ui.internal.ServersActionModeFiddlerActionDelegate"
+               id="org.apache.sling.ide.eclipse-ui.action1"
+               label="label"
+               style="push">
+         </action>
+      </viewContribution>
+   </extension>
+   <extension
+         point="org.eclipse.ui.console.consoleFactories">
+         <!-- while the id raises a validation warning, it does no harm and it allows the consoleFactory
+         	  to be included in the whitelabel support, so don't remove it --> 
+      <consoleFactory
+      		id="org.apache.sling.ide.eclipse.ui.console"
+      		icon="icons/obj16/sling_misc.gif"
+            class="org.apache.sling.ide.eclipse.ui.console.SlingConsoleFactory"
+            label="Sling Console">
+      </consoleFactory>
+   </extension>
+   
+   <extension
+         point="org.eclipse.core.expressions.definitions">
+         <definition
+               id="org.apache.sling.ide.eclipse.jcrNode">
+            <iterate ifEmpty="false">
+ 	           <adapt type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode"/>
+ 	         </iterate>
+         </definition>
+         <definition
+               id="org.apache.sling.ide.eclipse.nonSlingProject">
+     	   <not>
+       	   	  <or>
+              	<test
+	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+    				value="sling.content"/>
+              	<test
+	    			property="org.eclipse.wst.common.project.facet.core.projectFacet" 
+    				value="sling.bundle"/>
+    		  </or>
+			</not>               
+         </definition>
+   </extension>
+    
+   <extension
+   		point="org.eclipse.ui.menus">
+   		<!-- Convert to ... contributions -->
+   		<menuContribution
+           locationURI="popup:org.eclipse.ui.projectConfigure?after=additions">
+           <command
+                 commandId="org.apache.sling.ide.eclipse.ui.wizards.convertToContentProjectCommand"
+                 label="Convert to Content Project...">
+                 <!-- 
+                   don't enable for sling.content or sling.bundle projects 
+                   Described in depth at http://help.eclipse.org/luna/index.jsp?topic=%2Forg.eclipse.platform.doc.isv%2Fguide%2Fworkbench_cmd_expressions.htm
+                 -->
+                 <visibleWhen
+                       checkEnabled="false">
+                   	 <iterate ifEmpty="false">
+                   	   <instanceof value="org.eclipse.core.resources.IProject"/>
+                   	   <reference
+                             definitionId="org.apache.sling.ide.eclipse.nonSlingProject"/>
+                   	 </iterate>
+                 </visibleWhen>
+           </command>
+           <command
+                 commandId="org.apache.sling.ide.eclipse.ui.wizards.convertToBundleProjectCommand"
+                 label="Convert to Bundle Project...">
+                 <!-- 
+                 	don't enable for sling.content or sling.bundle projects
+                 	but require the Java nature
+             	 -->
+                 <visibleWhen
+                       checkEnabled="false">
+                   	 <iterate ifEmpty="false">
+                   	   <instanceof value="org.eclipse.core.resources.IProject"/>
+                   	   <test property="org.eclipse.core.resources.projectNature"
+                   	   		value="org.eclipse.jdt.core.javanature"/>
+                   	   <reference
+                             definitionId="org.apache.sling.ide.eclipse.nonSlingProject"/>
+                   	 </iterate>
+                 </visibleWhen>                 
+           </command>
+   		</menuContribution>
+   		
+   		<!-- Package Explorer contributions -->
+   		
+   		<menuContribution
+           locationURI="popup:org.eclipse.ui.popup.any?after=group.edit">
+           <command
+                 commandId="org.eclipse.ui.edit.copy">
+                 <visibleWhen
+                       checkEnabled="false">
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+           </command>
+           <command
+                 commandId="org.eclipse.ui.edit.paste">
+                 <visibleWhen
+                       checkEnabled="false">
+                    <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+           </command>
+           <command
+                 commandId="org.eclipse.ui.edit.delete">
+                 <visibleWhen
+                       checkEnabled="false">
+                       <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+           </command>
+           <command
+                 commandId="org.eclipse.ui.edit.rename">
+                 <visibleWhen
+                       checkEnabled="false">
+                       <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+           </command>
+        </menuContribution>
+
+        <!-- 'New' actions -->
+        <menuContribution
+              locationURI="popup:common.new.menu?after=new">
+              <command
+              	commandId="org.apache.sling.ide.eclipse.ui.actions.jcrNewNodeHandler"
+              	icon="icons/obj16/sling_misc.gif"
+              	label="&amp;Node">
+                 <visibleWhen
+                       checkEnabled="false">
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+              </command>              
+        </menuContribution>
+        
+        <!-- Other actions -->
+        <menuContribution
+              locationURI="popup:org.eclipse.ui.popup.any?after=additions">
+              <command
+              	commandId="org.apache.sling.ide.eclipse.ui.actions.jcrNodeImportContentHandler"
+              	icon="icons/obj16/sling_misc.gif"
+              	label="Import from server...">
+                 <visibleWhen
+                       checkEnabled="false">
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+              </command>
+              <command
+              	commandId="org.apache.sling.ide.eclipse.ui.actions.jcrNodeExportContentHandler"
+              	icon="icons/obj16/sling_misc.gif"
+              	label="Export to server...">
+                 <visibleWhen
+                       checkEnabled="false">
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+              </command>
+              <command
+              	commandId="org.apache.sling.ide.eclipse.ui.actions.openHtmlInBrowserHandler"
+              	icon="platform:/plugin/org.eclipse.ui.browser/icons/obj16/internal_browser.gif"
+              	label="&amp;Open .html (on server) in browser">
+                 <visibleWhen
+                       checkEnabled="false">
+					<reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+                 </visibleWhen>
+              </command>
+        </menuContribution>
+   	</extension>
+   	
+   	<extension
+   	      point="org.eclipse.ui.commands">
+   	      <!-- conversion commands -->
+   	      <command
+                id="org.apache.sling.ide.eclipse.ui.wizards.convertToBundleProjectCommand"
+                defaultHandler="org.apache.sling.ide.eclipse.ui.wizards.ConvertToBundleProjectHandler"
+                name="Convert to Bundle Project...">
+   	      </command>
+   	      <command
+                id="org.apache.sling.ide.eclipse.ui.wizards.convertToContentProjectCommand"
+                defaultHandler="org.apache.sling.ide.eclipse.ui.wizards.ConvertToContentProjectHandler"
+                name="Convert to Content Project...">
+   	      </command>
+   	      
+ 		  <!-- Node commands -->
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeDeleteHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteHandler"
+   	      		name="Delete Node...">
+         </command>   	      
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeRenameHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameHandler"
+   	      		name="Rename Node...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeCopyHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyHandler"
+   	      		name="Copy Node...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodePasteHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteHandler"
+   	      		name="Paste Node...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.openHtmlInBrowserHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.OpenHtmlInBrowserHandler"
+   	      		name="Open Node in Browser...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeExportContentHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeExportContentHandler"
+   	      		name="Export JCR content to server...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNodeImportContentHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNodeImportContentHandler"
+   	      		name="Import JCR content from server...">
+         </command>
+   	      <command
+   	      		id="org.apache.sling.ide.eclipse.ui.actions.jcrNewNodeHandler"
+   	      		defaultHandler="org.apache.sling.ide.eclipse.ui.actions.JcrNewNodeHandler"
+   	      		name="Import JCR content from server...">
+         </command>
+   	</extension>
+   	
+   	<extension
+   		point="org.eclipse.ui.handlers">
+   		
+   		<!-- handlers overiding standard commands: delete, rename, etc -->
+   		<handler
+           commandId="org.eclipse.ui.edit.delete"
+           class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeDeleteHandler">
+           <activeWhen>
+             <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+           </activeWhen>
+   		</handler>
+   		<handler
+           commandId="org.eclipse.ui.edit.rename"
+           class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeRenameHandler">
+           <activeWhen>
+             <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+           </activeWhen>
+   		</handler>
+   		<handler
+           commandId="org.eclipse.ui.edit.copy"
+           class="org.apache.sling.ide.eclipse.ui.actions.JcrNodeCopyHandler">
+           <activeWhen>
+             <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+           </activeWhen>
+   		</handler>
+   		<handler
+           commandId="org.eclipse.ui.edit.paste"
+           class="org.apache.sling.ide.eclipse.ui.actions.JcrNodePasteHandler">
+           <activeWhen>
+             <reference definitionId="org.apache.sling.ide.eclipse.jcrNode"/>
+           </activeWhen>
+   		</handler>
+   	</extension>
+   
+   <extension
+         point="org.eclipse.ui.decorators">
+      <decorator
+            adaptable="true"
+            class="org.apache.sling.ide.eclipse.ui.internal.ServerModuleDecorator"
+            id="org.apache.sling.ide.eclipse-ui.serverModuleDecorator"
+            label="ServerModule Decorator"
+            lightweight="true"
+            location="BOTTOM_LEFT"
+            state="true">
+         <enablement>
+           <objectClass
+                 name="org.eclipse.wst.server.ui.IServerModule">
+           </objectClass>
+         </enablement>
+      </decorator>
+      <decorator
+      		adaptable="true"
+      		class="org.apache.sling.ide.eclipse.ui.internal.JcrNodeDecorator"
+            id="org.apache.sling.ide.eclipse-ui.JcrNodeDecorator"
+            label="JCR Node decorator"
+            lightweight="true"
+            state="true">
+            <enablement>
+            	<objectClass
+                   name="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+            	</objectClass>
+            </enablement>
+      </decorator>
+   </extension>
+   <extension
+         point="org.eclipse.ui.navigator.linkHelper">
+      <linkHelper
+            class="org.apache.sling.ide.eclipse.ui.nav.model.LinkHelper"
+            id="org.apache.sling.ide.eclipse-ui.linkHelper">
+         <editorInputEnablement>
+         	<or>
+               <instanceof
+                     value="org.eclipse.ui.IEditorInput">
+               </instanceof>
+            </or>
+         </editorInputEnablement>
+         <selectionEnablement>
+               <instanceof
+                     value="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+               </instanceof>
+         </selectionEnablement>
+      </linkHelper>
+   </extension>
+   <extension
+         point="org.eclipse.ui.editors">
+      <editor
+            class="org.apache.sling.ide.eclipse.ui.editors.WebBrowser"
+            id="org.apache.sling.ide.eclipse.ui.editors.WebBrowser"
+            name="WebBrowser">
+      </editor>
+   </extension>
+   <extension
+         point="org.eclipse.ui.bindings">
+      <!-- Import/Export -->
+      <key
+            commandId="org.apache.sling.ide.commands.importContent"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+I">
+      </key>
+      <key
+            commandId="org.apache.sling.ide.commands.exportContent"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="M1+M2+X">
+      </key>
+   </extension>
+
+    <extension
+         point="org.eclipse.ui.trace.traceComponents">
+      <component
+            id="org.eclipse.ui.trace.tracingPrefPage"
+            label="Sling IDE Tooling">
+         <bundle
+               name="org.apache.sling.ide.eclipse-ui"></bundle>
+      </component>
+   </extension>
+    <extension
+          point="org.eclipse.ui.views">
+       <category
+             id="org.apache.sling.ide.views.sling"
+             name="Sling">
+       </category>
+       <view
+             category="org.apache.sling.ide.views.sling"
+             class="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
+             icon="icons/obj16/sling_misc.gif"
+             id="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
+             name="JCR Properties">
+       </view>
+    </extension>
+    <extension
+          point="org.eclipse.ui.perspectiveExtensions">
+       <perspectiveExtension
+             targetID="org.eclipse.jdt.ui.JavaPerspective">
+          <view
+                id="org.apache.sling.ide.eclipse.ui.views.JcrPropertiesView"
+                ratio="0.5"
+                relationship="right"
+                relative="org.eclipse.ui.views.ProblemView">
+          </view>
+       </perspectiveExtension>
+    </extension>
+     <extension
+          point="org.eclipse.ui.views.properties.tabbed.propertyContributor">
+       <propertyContributor
+             contributorId="org.eclipse.ui.navigator.ProjectExplorer">
+          <propertyCategory
+                category="tabGroup1"></propertyCategory>
+       </propertyContributor>
+    </extension>
+    <extension
+          point="org.eclipse.ui.views.properties.tabbed.propertyTabs">
+       <propertyTabs
+             contributorId="org.eclipse.ui.navigator.ProjectExplorer">
+          <propertyTab
+                afterTab="CommonNavigator.tab.Resource"
+                category="tabGroup1"
+                id="jcrProperties.tab1"
+                label="JCR Properties">
+          </propertyTab>
+       </propertyTabs>
+    </extension>
+    <extension
+          point="org.eclipse.ui.views.properties.tabbed.propertySections">
+       <propertySections
+             contributorId="org.eclipse.ui.navigator.ProjectExplorer">
+          <propertySection
+                class="org.apache.sling.ide.eclipse.ui.properties.JcrPropertiesSection"
+                enablesFor="1"
+                id="jcrProperties.section1"
+                tab="jcrProperties.tab1">
+             <input
+                   type="org.apache.sling.ide.eclipse.ui.nav.model.JcrNode">
+             </input>
+          </propertySection>
+       </propertySections>
+    </extension>
+    
+	<!-- JSP templates -->
+    <extension point="org.eclipse.ui.editors.templates">
+        <include
+            file="templates/jsp-templates.xml"
+            translations="templates/jsp-templates.properties"/>
+    </extension>    
+</plugin>    

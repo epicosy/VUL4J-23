@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.apache.sling</groupId>
+        <artifactId>sling</artifactId>
+        <version>26</version>
+        <relativePath/>
+    </parent>
+
+    <artifactId>org.apache.sling.launchpad.testing</artifactId>
+    <packaging>slingstart</packaging>
+    <version>9-SNAPSHOT</version>
+
+    <name>Apache Sling Launchpad Testing</name>
+    <description>
+        Sling Launchpad Testing module, contains integration tests that
+        were previously in the launchpad webapp module.
+    </description>
+
+    <scm>
+        <connection>scm:svn:http://svn.apache.org/repos/asf/sling/trunk/launchpad/testing</connection>
+        <developerConnection>scm:svn:https://svn.apache.org/repos/asf/sling/trunk/launchpad/testing</developerConnection>
+        <url>http://svn.apache.org/viewvc/sling/trunk/launchpad/testing</url>
+    </scm>
+
+    <properties>
+        <sling.java.version>7</sling.java.version>
+        
+        <sling.default.vm.options>-Xmx1024m -XX:MaxPermSize=256m -Djava.awt.headless=true</sling.default.vm.options>
+
+        <!-- path suffix for HTTP access to Sling -->
+        <http.base.path />
+
+        <!-- path suffix for WebDAV access to the repository -->
+        <webdav.workspace.path />
+
+        <!-- hostname for integration tests -->
+        <test.host>localhost</test.host>
+
+        <!-- optionally exclude some integration tests  -->
+        <failsafe.exclude></failsafe.exclude>
+
+        <slf4j.version>1.7.6</slf4j.version>
+        <logback.version>1.1.2</logback.version>
+
+        <min.port>41000</min.port>
+        <max.port>41199</max.port>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>reserve-network-port</id>
+                        <goals>
+                            <goal>reserve-network-port</goal>
+                        </goals>
+                        <phase>process-resources</phase>
+                        <configuration>
+                            <portNames>
+                                <portName>http.port</portName>
+                                <portName>sling.control.port</portName>
+                            </portNames>
+                            <minPortNumber>${min.port}</minPortNumber>
+                            <maxPortNumber>${max.port}</maxPortNumber>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.sling</groupId>
+                <artifactId>slingstart-maven-plugin</artifactId>
+                <version>1.4.2</version>
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                         <id>start-container</id>
+                        <goals>
+                            <goal>start</goal>
+                            <goal>stop</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <servers>
+                        <server>
+                            <port>${http.port}</port>
+                            <controlPort>${sling.control.port}</controlPort>
+                            <runmode>${sling.run.modes}</runmode>
+                            <contextPath>${http.base.path}</contextPath>
+                            <vmOpts>${sling.vm.options}</vmOpts>
+                        </server>
+                    </servers>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>integration-test</goal>
+                            <goal>verify</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <dependenciesToScan>
+                        <dependency>org.apache.sling:org.apache.sling.launchpad.integration-tests</dependency>
+                    </dependenciesToScan>
+                    <includes>
+                        <include>**/*Test.java</include>
+                        <include>**/*IT.java</include>
+                    </includes>
+                    <excludes>
+                        <exclude>${failsafe.exclude}</exclude>
+                    </excludes>
+                    <systemPropertyVariables>
+                        <launchpad.http.server.url>http://${test.host}:${http.port}/</launchpad.http.server.url>
+                        <launchpad.webdav.server.url>http://${test.host}:${http.port}/${webdav.workspace.path}</launchpad.webdav.server.url>
+                        <launchpad.servlet.context>${http.base.path}</launchpad.servlet.context>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>port-java6</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.6</jdk>
+            </activation>
+            <properties>
+                <min.port>41200</min.port>
+                <max.port>41399</max.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>port-java7</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.7</jdk>
+            </activation>
+            <properties>
+                <min.port>41400</min.port>
+                <max.port>41599</max.port>
+            </properties>
+        </profile>
+        <profile>
+            <id>port-java8</id>
+            <activation>
+                <activeByDefault>false</activeByDefault>
+                <jdk>1.8</jdk>
+            </activation>
+            <properties>
+                <min.port>41600</min.port>
+                <max.port>41799</max.port>
+            </properties>
+        </profile>
+        <profile>
+             <id>debug</id>
+             <activation>
+                <property>
+                    <name>debug</name>
+                </property>
+             </activation>
+             <properties>
+                <sling.vm.options>${sling.default.vm.options} -agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=8000</sling.vm.options>
+             </properties>
+        </profile>
+        <profile>
+             <id>no-debug</id>
+             <activation>
+                <property>
+                    <name>!debug</name>
+                </property>
+             </activation>
+             <properties>
+                <sling.vm.options>${sling.default.vm.options}</sling.vm.options>
+             </properties>
+        </profile>
+    </profiles>
+    
+    <dependencies>
+      <!-- The integration tests -->
+        <dependency>
+             <groupId>org.apache.sling</groupId>
+             <artifactId>org.apache.sling.launchpad.integration-tests</artifactId>
+             <version>1.0.3-SNAPSHOT</version>
+             <scope>test</scope>
+        </dependency>
+
+        <!-- Dependencies for the Test Build and Run -->
+        <dependency>
+            <groupId>javax.jcr</groupId>
+            <artifactId>jcr</artifactId>
+            <version>2.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>log4j-over-slf4j</artifactId>
+            <version>${slf4j.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+          <groupId>junit</groupId>
+          <artifactId>junit</artifactId>
+          <version>4.11</version>
+          <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+</project>

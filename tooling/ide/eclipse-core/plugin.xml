@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Licensed to the Apache Software Foundation (ASF) under one or
+    more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information regarding
+    copyright ownership. The ASF licenses this file to you under the
+    Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain
+    a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0 Unless required by
+    applicable law or agreed to in writing, software distributed
+    under the License is distributed on an "AS IS" BASIS, WITHOUT
+    WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+    See the License for the specific language governing permissions
+    and limitations under the License.
+-->
+<?eclipse version="3.0"?>
+<plugin>
+
+	<!-- Define the sling module type -->
+  <extension point="org.eclipse.wst.server.core.moduleTypes">
+    <moduleType
+       id="sling.content"
+       name="Content module"/>
+  </extension>
+  
+  <extension point="org.eclipse.wst.server.core.moduleTypes">
+    <moduleType
+       id="sling.bundle"
+       name="Bundle module"/>
+  </extension>
+
+  <!-- Define a sling module factory -->
+  <extension point="org.eclipse.wst.server.core.moduleFactories">
+  	<moduleFactory
+  		projects="true"
+  		class="org.apache.sling.ide.eclipse.core.internal.SlingContentModuleFactory"
+  		id="org.apache.sling.ide.contentModuleFactory"
+  		order="-10">
+	    <moduleType
+	       versions="1.0"
+	       types="sling.content"/>
+  	</moduleFactory>
+  </extension>
+  
+  <extension
+        point="org.eclipse.wst.server.core.moduleFactories">
+  	<moduleFactory
+  		projects="true"
+  		class="org.apache.sling.ide.eclipse.core.internal.SlingBundleModuleFactory"
+  		id="org.apache.sling.ide.bundleModuleFactory">
+	    <moduleType
+	       versions="1.0"
+	       types="sling.bundle"/>
+  	</moduleFactory>
+  </extension>
+
+	<!-- Define the sling facet we support -->
+	<extension point="org.eclipse.wst.common.project.facet.core.facets">
+		<project-facet id="sling.content">
+			<label>Content module</label>
+			<description>Content modules contain resources which are installed into the repository as they are. Good examples are static files ( HTML, CSS, JS ), scripts ( JSP, ESP ) and any other form of content.</description>
+		</project-facet>
+		
+  		<project-facet-version facet="sling.content" version="1.0"/>
+  		
+  		<action facet="sling.content" version="1.0" type="INSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingContentFacetInstallDelegate"/>
+  		</action>
+
+  		<action facet="sling.content" version="1.0" type="UNINSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingContentFacetUninstallDelegate"/>
+  		</action>
+
+		<project-facet id="sling.bundle">
+			<label>Bundle module</label>
+			<description>OSGi bundle modules contain java code which is installed as an OSGi bundle in Sling-compatbile runtime.</description>
+		</project-facet>
+		
+  		<project-facet-version facet="sling.bundle" version="1.0"/>
+  		
+  		<action facet="sling.bundle" version="1.0" type="INSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingBundleFacetInstallDelegate"/>
+  		</action>
+
+  		<action facet="sling.bundle" version="1.0" type="UNINSTALL">
+  			<delegate class="org.apache.sling.ide.eclipse.core.internal.SlingBundleFacetUninstallDelegate"/>
+  		</action>
+	</extension>  
+
+	<!-- Define the Sling launchpad runtime type -->
+  <extension point="org.eclipse.wst.server.core.runtimeTypes">
+    <runtimeType
+       id="org.apache.sling.ide.launchpadRuntimeType"
+       name="Sling Runtime"
+       description="A Sling-compatible runtime which contains the Felix Web Console and a JCR WebDAV remoting entry point."
+       vendor="Sling"
+       version="1.0"
+       class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadRuntime">
+       <moduleType types="sling.content" versions="1.0"/> 
+       <moduleType types="sling.bundle" versions="1.0"/> 
+    </runtimeType>
+  </extension>
+  
+  <!-- Define the Sling launchpad server type -->
+  <extension point="org.eclipse.wst.server.core.serverTypes">
+     <serverType
+       id="org.apache.sling.ide.launchpadServer"
+       name="Sling Server (external)"
+       description="A Sling server whose lifecycle is controlled independently from Eclipse."
+       supportsRemoteHosts="true"
+       runtime="true"
+       startTimeout="30000"
+       stopTimeout="15000"
+       initialState="stopped"
+       hasConfiguration="true"
+       launchConfigId="org.apache.sling.ide.launchpadLaunchConfigurationType"       
+       runtimeTypeId="org.apache.sling.ide.launchpadRuntimeType"
+       class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadServer"
+       behaviourClass="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadBehaviour">
+     </serverType>
+  </extension>
+
+  <extension point="org.eclipse.wst.server.core.launchableAdapters">
+     <launchableAdapter
+        class="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadLaunchableAdapterDelegate"
+        id="org.apache.sling.ide.launchpadLaunchableAdapterDelegate"/>
+  </extension>
+
+	<!-- Define the launch configuration type for the launchpad TODO do we need a sourcePathComputer ? -->
+  <extension point="org.eclipse.debug.core.launchConfigurationTypes">
+     <launchConfigurationType
+        id="org.apache.sling.ide.launchpadLaunchConfigurationType"
+        name="Sling Launchpad"
+        delegate="org.apache.sling.ide.eclipse.core.internal.SlingLaunchpadLaunchConfigurationDelegate"
+        modes="run,debug"
+        sourceLocatorId="org.eclipse.jdt.launching.sourceLocator.JavaSourceLookupDirector"/>
+  </extension>
+    
+	<!-- Declare that the launchpad runtime type, supporting content modules -->
+	<extension point="org.eclipse.wst.common.project.facet.core.runtimes">
+		<runtime-component-type id="org.apache.sling.ide.launchpadRuntimeComponentType"/>
+		<runtime-component-version type="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
+		
+	    <adapter>
+	      <runtime-component
+	         id="org.apache.sling.ide.launchpadRuntimeComponentType"/>
+	      <factory
+	         class="org.eclipse.jst.server.core.internal.RuntimeClasspathProvider$Factory"/>
+	      <type
+	         class="org.eclipse.jst.common.project.facet.core.IClasspathProvider"/>
+	    </adapter>		
+		
+  		<supported>
+  			<runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType" version="1.0"/>
+  			<facet id="sling.content" version="1.0"/>
+  		</supported>
+	</extension>
+
+
+	<!-- Define default facets ( needed ? ) -->
+  <extension point="org.eclipse.wst.common.project.facet.core.defaultFacets">
+    <default-facets>
+      <runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType"/>
+      <facet id="sling.content" version="1.0"/>
+    </default-facets>
+    <default-facets>
+      <runtime-component id="org.apache.sling.ide.launchpadRuntimeComponentType"/>
+      <facet id="sling.bundle" version="1.0"/>
+    </default-facets>
+  </extension>
+  	
+	<!-- Map from the launchpad runtime type to our runtime components -->
+	  <extension point="org.eclipse.jst.server.core.runtimeFacetMappings">
+    	<runtimeFacetMapping
+      runtimeTypeId="org.apache.sling.ide.launchpadRuntimeType"
+      runtime-component="org.apache.sling.ide.launchpadRuntimeComponentType"
+      version="1.0"/>
+     </extension>
+     
+    <extension
+         point="org.eclipse.ui.trace.traceComponents">
+      <component
+            id="org.eclipse.ui.trace.tracingPrefPage"
+            label="Sling IDE Tooling">
+         <bundle
+               name="org.apache.sling.ide.eclipse-core"></bundle>
+      </component>
+   </extension>
+
+   <extension
+         point="org.eclipse.core.expressions.propertyTesters">
+         <propertyTester
+               id="org.apache.sling.ide.eclipse.internal.ExportableResourceTester"
+               type="org.eclipse.core.resources.IResource"
+               namespace="org.apache.sling.ide.eclipse"
+               properties="canBeExported,canBeImported"
+               class="org.apache.sling.ide.eclipse.core.internal.ContentResourceTester">
+         </propertyTester>
+   </extension>
+   
+   <extension
+         id="bundleValidator"
+         point="org.eclipse.wst.validation.validatorV2"
+         name="Sling Bundle Validator">
+      <validator class="org.apache.sling.ide.eclipse.internal.validation.BundleProjectValidator">
+      	<include>
+          <rules>
+          	<facet
+                 id="sling.bundle">
+          	</facet>
+          </rules>
+      	</include>
+      </validator>
+   </extension>
+   
+   <extension
+         id="contentProjectValidator"
+         point="org.eclipse.wst.validation.validatorV2"
+         name="Sling Content Project Validator">
+      <validator class="org.apache.sling.ide.eclipse.internal.validation.ContentProjectValidator">
+      	<include>
+          <rules>
+          	<facet
+                 id="sling.content">
+          	</facet>
+          </rules>
+      	</include>
+      </validator>
+   </extension>
+   
+   <!-- disable XML validation for content projects -->
+    <extension id="org.apache.sling.ide.excludeXmlValidator" point="org.eclipse.wst.validation.exclude">
+    	<validator id="org.eclipse.wst.xml.core.xml">
+			<exclude>
+				<rules>
+					<facet id="sling.content"/>
+				</rules>
+			</exclude>
+		</validator>
+ 	</extension>
+ 	
+ 	<!-- Store project preferences in the filesystem -->
+ 	<extension id="org.apache.sling.ide.preferences" point="org.eclipse.core.runtime.preferences">
+ 		<scope name="project" class="org.eclipse.core.internal.resources.ProjectPreferences">
+ 		</scope>
+ 	</extension>
+</plugin>    
